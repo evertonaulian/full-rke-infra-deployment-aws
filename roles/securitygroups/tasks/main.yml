@@ -1,0 +1,55 @@
+---
+#Security groups for Workers, etcs, and controlplane
+
+# - name: Creating security group for Load Balancer
+#   ec2_group:
+#     region: "{{ region }}"
+#     name: sg_lb_rancher
+#     description: sg_lb_rancher
+#     vpc_id: "{{ vpc.vpc.id }}"
+#     purge_rules: yes
+#     purge_tags: yes
+#     state: present
+#     rules:
+#       - proto: tcp
+#         ports:
+#           - 80
+#         cidr_ip: 0.0.0.0/0
+#         rule_desc: HTTP Access
+#       - proto: tcp
+#         ports:
+#           - 443
+#         cidr_ip: 0.0.0.0/0
+#         rule_desc: HTTPS Access
+
+- name: Creating security group for workers
+  ec2_group:
+    region: "{{ region }}"
+    name: sg_workers
+    description: sg_workers
+    vpc_id: "{{ vpc.vpc.id }}"
+    purge_rules: yes
+    purge_tags: yes
+    state: present
+    rules:
+      - proto: tcp
+        ports:
+          - 80
+        cidr_ip: 0.0.0.0/0
+        rule_desc: HTTP Access
+
+- name: Creating security group for bastion host
+  ec2_group:
+    region: "{{ region }}"
+    name: sg_bastion_host
+    description: sg_bastion_host
+    vpc_id: "{{ vpc.vpc.id }}"
+    purge_rules: yes
+    purge_tags: yes
+    state: present
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: "{{ PUBLICIP }}/32"
+        rule_desc: HTTP Access

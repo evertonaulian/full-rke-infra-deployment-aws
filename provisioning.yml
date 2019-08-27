@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  roles:
+    - infrastructure
+    - loadbalancer
+    - securitygroups
+    - os
+    #- bastion
+    #- controlplane
+    #- etcd
+    - workers

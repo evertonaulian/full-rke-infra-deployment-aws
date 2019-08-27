@@ -1,0 +1,75 @@
+---
+# Create a network load balance and two target groups as described on Rancher website
+# https://rancher.com/docs/rancher/v2.x/en/installation/ha/create-nodes-lb/nlb/
+
+- name: Create target group to port 443
+  elb_target_group:
+    region: "{{ region }}"
+    name: rancher-tcp-443
+    protocol: tcp
+    port: 443
+    target_type: instance
+    vpc_id: "{{ vpc.vpc.id }}"
+    health_check_protocol: http
+    health_check_path: /healthz
+    health_check_port: "80"
+    health_check_interval: 10
+    successful_response_codes: "200-399"
+    state: present
+  register: target443
+
+- name: Create target group to port 80
+  elb_target_group:
+    region: "{{ region }}"
+    name: rancher-tcp-80
+    protocol: tcp
+    port: 80
+    target_type: instance
+    vpc_id: "{{ vpc.vpc.id }}"
+    health_check_protocol: http
+    health_check_path: /healthz
+    health_check_port: 'traffic-port'
+    health_check_interval: 10
+    successful_response_codes: "200-399"
+    state: present
+  register: target80
+
+- name: Create an ELB and attach a listener
+  elb_network_lb:
+    region: "{{ region }}"
+    name: rancher
+    scheme: internet-facing
+    purge_tags: yes
+    cross_zone_load_balancing: yes
+    #deletion_protection: yes
+    subnets:
+      - "{{ public_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}"
+      - "{{ public_subnet_facts.results[1].subnets | map(attribute='subnet_id') | list | first }}"
+      - "{{ public_subnet_facts.results[2].subnets | map(attribute='subnet_id') | list | first }}"
+    listeners:
+      - Protocol: TCP # Required. The protocol for connections from clients to the load balancer (Only TCP is available) (case-sensitive).
+        Port: 443 # Required. The port on which the load balancer is listening.
+        DefaultActions:
+          - Type: forward # Required. Only 'forward' is accepted at this time
+            TargetGroupName: "{{ target443.target_group_name }}" # Required. The name of the target group
+      - Protocol: TCP # Required. The protocol for connections from clients to the load balancer (Only TCP is available) (case-sensitive).
+        Port: 80 # Required. The port on which the load balancer is listening.
+        DefaultActions:
+          - Type: forward # Required. Only 'forward' is accepted at this time
+            TargetGroupName: "{{ target80.target_group_name }}" # Required. The name of the target group
+    tags:
+      Ambiente: "{{ Ambiente }}"
+      Projeto: "{{ Projeto }}"
+    state: present
+  register: elb
+
+- name: Associate loadbalance to route 53
+  route53:
+    state: present
+    zone: evertonandrade.com
+    record: rancher.evertonandrade.com
+    type: A
+    alias: yes
+    overwrite: yes
+    alias_hosted_zone_id: Z26RNL4JYFTOTI
+    value: "{{ elb.dns_name }}"

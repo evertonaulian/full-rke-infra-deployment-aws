@@ -1,0 +1,31 @@
+---
+- name: Creating Workers
+  ec2_instance:
+    filters: 
+      tag:Name: "{{ item.server }} - {{ item.description }}"
+    region: "{{region}}"
+    key_name: "{{key}}"
+    instance_type: "{{ node_instance_flavor }}"
+    image_id: "{{ centos.images[0].image_id }}"
+    vpc_subnet_id: "{{ item.subnet }}"
+    termination_protection: yes
+    volumes:
+      - device_name: /dev/sda1
+        ebs:
+          volume_size: "{{ node_rootdisk_size }}"
+          volume_type: gp2
+          delete_on_termination: true
+          encrypted: false
+    tags:
+      Name: "{{ item.server }} - {{ item.description }}"
+      Ambiente: "{{ Ambiente }}"
+      Projeto: "{{ Projeto }}"
+    network:
+      assign_public_ip: true
+      #Must be changed later, I'm using the public ip now just because a do not want to pay for a NatGateway
+    security_groups: sg_rancher
+    user_data: "{{ data }}"
+  loop:
+    - { server: 'AWSK8SXND-PD-01', description: 'NODE', subnet: "{{ privatesubnetA }}"}
+    - { server: 'AWSK8SXND-PD-02', description: 'NODE', subnet: "{{ privatesubnetB }}"}
+    - { server: 'AWSK8SXND-PD-03', description: 'NODE', subnet: "{{ privatesubnetC }}"}

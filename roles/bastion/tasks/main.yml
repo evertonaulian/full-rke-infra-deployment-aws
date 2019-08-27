@@ -1,0 +1,31 @@
+---
+- name: Creating Bastion Host
+  ec2_instance:
+    filters: 
+      tag:Name: "{{ item.server }} - {{ item.description }}"
+    region: "{{region}}"
+    key_name: "{{key}}"
+    instance_type: "{{ basion_host_instance_flavor }}"
+    image_id: "{{ centos.images[0].image_id }}"
+    vpc_subnet_id: "{{ item.subnet }}"
+    #instance_role: S3FullAccess
+    termination_protection: yes
+    volumes:
+      - device_name: /dev/sda1
+        ebs:
+          volume_size: "{{ bastion_host_rootdisk_size }}"
+          volume_type: gp2
+          delete_on_termination: true
+          encrypted: false
+    tags:
+      Name: "{{ item.server }} - {{ item.description }}"
+      Ambiente: PRODUCAO
+      Projeto: RANCHER
+    network:
+      assign_public_ip: true
+      #Must be changed later, I'm using the public ip now just because a do not want to pay for a NatGateway
+    security_groups: sg_basion_host
+    user_data: "{{ bastion }}"
+  loop:
+    - { server: 'AWSK8SXND-PD-04', description: 'MAIN', subnet: "{{ privatesubnetA }}"}
+

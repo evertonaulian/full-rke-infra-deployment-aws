@@ -1,0 +1,8 @@
+---
+- name: Get latest CentOS image
+  ec2_ami_facts:
+    filters:
+      name: "CentOS Linux 7 x86_64 HVM EBS ENA 1901_01*"
+      owner-alias: aws-marketplace
+    region: "{{ region }}"
+  register: centos
