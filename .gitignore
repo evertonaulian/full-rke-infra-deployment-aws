@@ -1,2 +1,3 @@
 provisioning.retry
 *.pem
+.DS_Store
