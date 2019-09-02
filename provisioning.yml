@@ -5,7 +5,7 @@
     - loadbalancer
     - securitygroups
     - os
-    #- bastion
     #- controlplane
     #- etcd
     - workers
+    - bastion

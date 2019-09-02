@@ -45,7 +45,6 @@
     subnets:
       - "{{ public_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}"
       - "{{ public_subnet_facts.results[1].subnets | map(attribute='subnet_id') | list | first }}"
-      - "{{ public_subnet_facts.results[2].subnets | map(attribute='subnet_id') | list | first }}"
     listeners:
       - Protocol: TCP # Required. The protocol for connections from clients to the load balancer (Only TCP is available) (case-sensitive).
         Port: 443 # Required. The port on which the load balancer is listening.

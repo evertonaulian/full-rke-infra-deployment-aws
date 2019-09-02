@@ -21,11 +21,12 @@
       Ambiente: "{{ Ambiente }}"
       Projeto: "{{ Projeto }}"
     network:
-      assign_public_ip: true
-      #Must be changed later, I'm using the public ip now just because a do not want to pay for a NatGateway
-    security_groups: sg_rancher
-    user_data: "{{ data }}"
+      assign_public_ip: true #Must be changed later, I'm using the public ip now just because a do not want to pay for a NatGateway
+      private_ip_address: "{{ item.ipaddress }}" #Must be improved to do not depend on fixed IP address
+    security_groups: sg_workers
+    user_data: "{{ cluster }}"
   loop:
-    - { server: 'AWSK8SXND-PD-01', description: 'NODE', subnet: "{{ privatesubnetA }}"}
-    - { server: 'AWSK8SXND-PD-02', description: 'NODE', subnet: "{{ privatesubnetB }}"}
-    - { server: 'AWSK8SXND-PD-03', description: 'NODE', subnet: "{{ privatesubnetC }}"}
+    - { server: 'AWSK8SXED-PD-01', description: 'ETCD', subnet: "{{ private_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}", ipaddress: 10.0.2.100}
+    - { server: 'AWSK8SXCP-PD-02', description: 'CONTROLPLANE', subnet: "{{ private_subnet_facts.results[1].subnets | map(attribute='subnet_id') | list | first }}", ipaddress: 10.0.4.100}
+    - { server: 'AWSK8SXWK-PD-03', description: 'WORKER', subnet: "{{ private_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}", ipaddress: 10.0.2.110}
+    - { server: 'AWSK8SXWK-PD-04', description: 'WORKER', subnet: "{{ private_subnet_facts.results[1].subnets | map(attribute='subnet_id') | list | first }}", ipaddress: 10.0.4.110}

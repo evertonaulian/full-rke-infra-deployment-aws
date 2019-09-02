@@ -40,10 +40,8 @@
   loop:
     - { name: PUBLIC A, az: "{{ region }}a" , cidr: "{{ cidr_public_a }}", map_public: yes}
     - { name: PUBLIC B, az: "{{ region }}b" , cidr: "{{ cidr_public_b }}", map_public: yes}
-    - { name: PUBLIC C, az: "{{ region }}c" , cidr: "{{ cidr_public_c }}", map_public: yes}
     - { name: PRIVATE A, az: "{{ region }}a" , cidr: "{{ cidr_private_a }}", map_public: no}
     - { name: PRIVATE B, az: "{{ region }}b" , cidr: "{{ cidr_private_b }}", map_public: no}
-    - { name: PRIVATE C, az: "{{ region }}c" , cidr: "{{ cidr_private_c }}", map_public: no}
   register: subnets
 
 - name: Set up public subnet route table
@@ -57,7 +55,6 @@
     subnets:
       - "PUBLIC A"
       - "PUBLIC B"
-      - "PUBLIC C"
     routes:
       - dest: 0.0.0.0/0
         gateway_id: "{{ igw.gateway_id }}"
@@ -72,17 +69,16 @@
   loop:
     - "PUBLIC A"
     - "PUBLIC B"
-    - "PUBLIC C"
   register: public_subnet_facts
 
-# - name: Create nat gateway on public subnets
-#   ec2_vpc_nat_gateway:
-#     region: "{{ region }}"
-#     subnet_id: "{{ item.subnets | map(attribute='subnet_id') | list | first }}"
-#     if_exist_do_not_create: yes
-#     state: present
-#   register: nat
-#   loop: "{{ public_subnet_facts.results }}"
+- name: Create nat gateway on public subnets
+  ec2_vpc_nat_gateway:
+    region: "{{ region }}"
+    subnet_id: "{{ item.subnets | map(attribute='subnet_id') | list | first }}"
+    if_exist_do_not_create: yes
+    state: present
+  register: nat
+  loop: "{{ public_subnet_facts.results }}"
 
 - name: Get private subnet facts
   ec2_vpc_subnet_facts:
@@ -93,24 +89,22 @@
   loop:
     - "PRIVATE A"
     - "PRIVATE B"
-    - "PRIVATE C"
   register: private_subnet_facts
 
-# - name: Set up private subnet route table
-#   ec2_vpc_route_table:
-#     region: "{{ region }}"
-#     vpc_id: "{{ vpc.vpc.id }}"
-#     tags:
-#       Name: "{{ item.name }}"
-#       Ambiente: "{{ Ambiente }}"
-#       Projeto: "{{ Projeto }}"
-#     subnets:
-#       - "{{ item.subnet }}"
-#     routes:
-#       - dest: 0.0.0.0/0
-#         gateway_id: "{{ item.nat }}"
-#   register: public_rtb
-#   loop:
-#     - { name: "rtb-privateA", subnet: "{{ private_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}", nat: "{{ nat.results[0].nat_gateway_id  }}" }
-#     - { name: "rtb-privateB", subnet: "{{ private_subnet_facts.results[1].subnets | map(attribute='subnet_id') | list | first }}", nat: "{{ nat.results[1].nat_gateway_id  }}" }
-#     - { name: "rtb-privateC", subnet: "{{ private_subnet_facts.results[2].subnets | map(attribute='subnet_id') | list | first }}", nat: "{{ nat.results[2].nat_gateway_id  }}" }
+- name: Set up private subnet route table
+  ec2_vpc_route_table:
+    region: "{{ region }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    tags:
+      Name: "{{ item.name }}"
+      Ambiente: "{{ Ambiente }}"
+      Projeto: "{{ Projeto }}"
+    subnets:
+      - "{{ item.subnet }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ item.nat }}"
+  register: public_rtb
+  loop:
+    - { name: "rtb-privateA", subnet: "{{ private_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}", nat: "{{ nat.results[0].nat_gateway_id  }}" }
+    - { name: "rtb-privateB", subnet: "{{ private_subnet_facts.results[1].subnets | map(attribute='subnet_id') | list | first }}", nat: "{{ nat.results[1].nat_gateway_id  }}" }

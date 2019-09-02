@@ -10,8 +10,6 @@ cidr_public_a: 10.0.1.0/24
 cidr_private_a: 10.0.2.0/24
 cidr_public_b: 10.0.3.0/24
 cidr_private_b: 10.0.4.0/24
-cidr_public_c: 10.0.5.0/24
-cidr_private_c: 10.0.6.0/24
 
 key: everton.aulianNV
 
@@ -22,11 +20,6 @@ basion_host_instance_flavor: t2.micro
 #Volume
 node_rootdisk_size: 8
 bastion_host_rootdisk_size: 8
-
-#Subnets
-privatesubnetA: subnet-0009d73ac0b43f1dd
-privatesubnetB: subnet-0099ae215c511d4a5
-privatesubnetC: subnet-065a43dda84e57b33
 
 cluster: |
   #!/bin/sh
@@ -74,7 +67,7 @@ cluster: |
 
   #Run docker as non-root user.
   usermod -aG docker centos
-
+  
   #Start Docker
   systemctl enable docker
   systemctl start docker
@@ -122,6 +115,10 @@ bastion: |
   systemctl start auditd
   systemctl enable auditd
 
+  #Copy key to server
+  echo "{{ KEY }}" > ~/.ssh/k8s.pem
+  chmod 400 ~/.ssh/*
+
   #Clone git repository with deploy configuration
   git clone https://github.com/evertonaulian/aulian-rke.git
 
@@ -138,7 +135,7 @@ bastion: |
   yum install -y kubectl
 
   #Configure RKE
-  wget https://github.com/rancher/rke/releases/latest/download/rke_linux-arm64
+  wget https://github.com/rancher/rke/releases/latest/download/rke_linux-amd64
   mv rke_linux-amd64 rke
   chmod +x rke
   ./rke --version

@@ -19,13 +19,13 @@
           encrypted: false
     tags:
       Name: "{{ item.server }} - {{ item.description }}"
-      Ambiente: PRODUCAO
-      Projeto: RANCHER
+      Ambiente: "{{ Ambiente }}"
+      Projeto: "{{ Projeto }}"
     network:
       assign_public_ip: true
       #Must be changed later, I'm using the public ip now just because a do not want to pay for a NatGateway
-    security_groups: sg_basion_host
+    security_groups: sg_bastion_host
     user_data: "{{ bastion }}"
   loop:
-    - { server: 'AWSK8SXND-PD-04', description: 'MAIN', subnet: "{{ privatesubnetA }}"}
+    - { server: 'AWSK8SXBH-PD-04', description: 'BASTION HOST', subnet: "{{ public_subnet_facts.results[0].subnets | map(attribute='subnet_id') | list | first }}"}
 
